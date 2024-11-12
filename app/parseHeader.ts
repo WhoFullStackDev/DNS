@@ -1,4 +1,4 @@
-function getValue(msg: Buffer) {
+function parseHeader(msg: Buffer) {
   const id = msg.readUint16BE(0);
   const flag = msg.readUInt16BE(2);
   const qdcount = msg.readUint16BE(4);
@@ -20,4 +20,4 @@ function extractFlags(flags: number) {
   const rcode = flags & 0b0000000000001111;
   return { qr, opcode, aa, tc, rd, ra, z, rcode };
 }
-export default getValue;
+export default parseHeader;

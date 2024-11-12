@@ -3,19 +3,19 @@ import type { Question } from "./writeQuestion";
 import writeHeader from "./writeaHeader";
 import writeQuestions from "./writeQuestion";
 import writeAnswers from "./writeAnswer";
-import getValue from "./getValue";
+import parseHeader from "./parseHeader";
+import parseQuestion from "./parseQuestion";
 
 const udpSocket: dgram.Socket = dgram.createSocket("udp4");
 udpSocket.bind(2053, "127.0.0.1");
 
 udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
-  const value = getValue(data);
+  const value = parseHeader(data);
+  const QuestData = parseQuestion(data);
   try {
     console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
 
-    const questions: Question[] = [
-      { class: 1, type: 1, domainName: "codecrafters.io" },
-    ];
+    const questions: Question[] = QuestData;
     const answers = [
       {
         type: 1,
