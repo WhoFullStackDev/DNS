@@ -16,15 +16,17 @@ udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
     console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
 
     const questions: Question[] = QuestData;
-    const answers = [
-      {
-        type: 1,
-        class: 1,
-        ttl: 60,
-        data: "\x08\x08\x08\x08",
-        domainName: "codecrafters.io",
-      },
-    ];
+    const answers = questions.map((question) => {
+      const domainName = question.domainName;
+      return {
+        domainName,
+        type: 1, // A record
+        class: 1, // IN class
+        ttl: 60, // TTL (e.g., 60 seconds)
+        dataLength: 4, // Data length for IPv4 address (4 bytes)
+        data: "\x08\x08\x08\x08", // Dummy IPv4 address
+      };
+    });
     const header = writeHeader({
       QR: 1,
       packetId: value.id,
