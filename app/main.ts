@@ -3,11 +3,13 @@ import type { Question } from "./writeQuestion";
 import writeHeader from "./writeaHeader";
 import writeQuestions from "./writeQuestion";
 import writeAnswers from "./writeAnswer";
+import getValue from "./getValue";
 
 const udpSocket: dgram.Socket = dgram.createSocket("udp4");
 udpSocket.bind(2053, "127.0.0.1");
 
 udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
+  const value = getValue(data);
   try {
     console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
 
@@ -24,12 +26,16 @@ udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
       },
     ];
     const header = writeHeader({
-      packetId: 1234,
       QR: 1,
+      packetId: value.id,
+      OPCODE: value.flagObj.opcode,
+      RD: value.flagObj.rd,
+      RCODE: value.flagObj.opcode === 0 ? 0 : 4,
       QDCOUNT: questions.length,
       ANCOUNT: answers.length,
     });
     udpSocket.send(
+      // @ts-expect-error
       Buffer.concat([header, writeQuestions(questions), writeAnswers(answers)]),
       remoteAddr.port,
       remoteAddr.address

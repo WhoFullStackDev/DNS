@@ -1,5 +1,5 @@
 const writeHeader = ({
-  QR = 0,
+  QR = 1,
   TC = 0,
   RD = 0,
   Z = 0,
