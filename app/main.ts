@@ -1,5 +1,7 @@
 import * as dgram from "dgram";
 import { DnsMessageHeader } from "./dnsMessage";
+import type { Question } from "./writeQuestion";
+import writeHeader from "./writeaHeader";
 
 const udpSocket: dgram.Socket = dgram.createSocket("udp4");
 
@@ -10,8 +12,20 @@ defeaultHeader.isResponse = true;
 udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
   try {
     console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
-    const response = Buffer.from(defeaultHeader.encode());
-    udpSocket.send(response, remoteAddr.port, remoteAddr.address);
+    const questions: Question[] = [
+      { domainName: "codecrafters.io", class: 1, type: 1 },
+    ];
+    const header = writeHeader({
+      packetId: 1234,
+      QR: 1,
+      QDCOUNT: questions.length,
+    });
+    udpSocket.send(
+      // @ts-expect-error
+      Buffer.concat([header, writeHeader(questions)]),
+      remoteAddr.port,
+      remoteAddr.address
+    );
   } catch (e) {
     console.log(`Error sending data: ${e}`);
   }
