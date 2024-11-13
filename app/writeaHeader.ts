@@ -1,3 +1,5 @@
+import type { DnsMessageHeaders } from "./types";
+
 const writeHeader = ({
   QR = 1,
   TC = 0,
@@ -12,21 +14,7 @@ const writeHeader = ({
   ANCOUNT = 0,
   QDCOUNT = 0,
   packetId = 0,
-}: {
-  packetId?: number; // 16 bits
-  QR?: number; // 1 bit
-  OPCODE?: number; // 4 bits
-  AA?: number; // 1 bit
-  TC?: number; // 1 bit
-  RD?: number; // 1 bit
-  RA?: number; // 1 bit
-  Z?: number; // 3 bits
-  RCODE?: number; // 4 bits
-  QDCOUNT?: number; // 16 bits
-  ANCOUNT?: number; // 16 bits
-  NSCOUNT?: number; // 16 bits
-  ARCOUNT?: number; // 16 bits
-}) => {
+}: DnsMessageHeaders) => {
   const buffer = Buffer.alloc(12);
   buffer.writeInt16BE(packetId);
   const computed =

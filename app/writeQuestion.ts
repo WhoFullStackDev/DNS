@@ -1,9 +1,6 @@
-export type Question = {
-  type: number;
-  class: number;
-  domainName: string;
-};
-const writeQuestions = (questions: Question[]) => {
+import type { DnsMessageQuestions } from "./types";
+
+const writeQuestions = (questions: DnsMessageQuestions[]) => {
   return Buffer.concat(
     // @ts-expect-error
     questions.map((q) => {
