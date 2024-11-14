@@ -10,12 +10,7 @@ function parseQuestion(questionsBuff: Buffer, qdcount: number) {
   }> = [];
 
   for (let i = 0; i < qdcount; i++) {
-    const label: string[] = [];
-    const { domainName, newOffset } = extractLabel(
-      questionsBuff,
-      offset,
-      label
-    );
+    const [domainName, newOffset] = extractLabel(questionsBuff, offset);
 
     offset = newOffset;
 

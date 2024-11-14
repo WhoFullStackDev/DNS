@@ -3,8 +3,7 @@ import extractLabel from "./extractLabel";
 function parseAnswer(data: Buffer, ancount: number, offset: number) {
   const answers = [];
   for (let i = 0; i < ancount; i++) {
-    const label: string[] = [];
-    const { domainName, newOffset } = extractLabel(data, offset, label);
+    const [name, newOffset] = extractLabel(data, offset);
     offset = newOffset;
 
     // Read Type (2 bytes)
@@ -37,7 +36,7 @@ function parseAnswer(data: Buffer, ancount: number, offset: number) {
     // Log the parsed answer for debugging
 
     answers.push({
-      domainName,
+      domainName: name,
       type,
       class: classCode,
       ttl,
