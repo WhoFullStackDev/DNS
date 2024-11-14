@@ -1,36 +1,41 @@
 import * as dgram from "dgram";
-import type { Question } from "./writeQuestion";
 import writeHeader from "./writeaHeader";
 import writeQuestions from "./writeQuestion";
 import writeAnswers from "./writeAnswer";
 import parseHeader from "./parseHeader";
 import parseQuestion from "./parseQuestion";
+import forwardQuery from "./forwardQuery";
+import type { DnsMessageAnswer, DnsMessageQuestions } from "./types";
 
 const udpSocket: dgram.Socket = dgram.createSocket("udp4");
 udpSocket.bind(2053, "127.0.0.1");
 
-udpSocket.on("message", (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
+udpSocket.on("message", async (data: Buffer, remoteAddr: dgram.RemoteInfo) => {
   const value = parseHeader(data);
-  const QuestData = parseQuestion(data);
+  const QuestData = parseQuestion(data, value.QDCOUNT as number);
   try {
     console.log(`Received data from ${remoteAddr.address}:${remoteAddr.port}`);
 
-    const questions: Question[] = QuestData;
-    const answers = questions.map((question) => ({
-      domainName: question.domainName, // Uncompressed label from question
-      type: 1, // Type A (IPv4 address)
-      class: 1, // Class IN (Internet)
-      ttl: 300, // TTL value
-      data: "192.0.2.1", // Example IPv4 address
-    }));
+    const questions: DnsMessageQuestions[] = QuestData;
+    const responses = await Promise.all(
+      questions.map((question) => forwardQuery(value, question))
+    );
+
+    const answers: DnsMessageAnswer[] = [];
+    for (const response of responses) {
+      if (response === null || response.answer[0] === undefined) {
+        return null;
+      }
+      answers.push(...response.answer);
+    }
 
     const header = writeHeader({
       QR: 1,
-      packetId: value.id,
-      OPCODE: value.flagObj.opcode,
-      RD: value.flagObj.rd,
-      RCODE: value.flagObj.opcode === 0 ? 0 : 4,
-      QDCOUNT: questions.length,
+      packetId: value.packetId,
+      OPCODE: value.OPCODE,
+      RD: value.RD,
+      RCODE: value.RCODE === 0 ? 0 : 4,
+      QDCOUNT: value.QDCOUNT,
       ANCOUNT: answers.length,
     });
     udpSocket.send(

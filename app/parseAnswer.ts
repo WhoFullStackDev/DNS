@@ -1,8 +1,6 @@
 import extractLabel from "./extractLabel";
 
-function parseAnswer(data: Buffer, ancount: number) {
-  let offset = 16;
-
+function parseAnswer(data: Buffer, ancount: number, offset: number) {
   const answers = [];
   for (let i = 0; i < ancount; i++) {
     const label: string[] = [];
@@ -35,6 +33,8 @@ function parseAnswer(data: Buffer, ancount: number) {
       resourceData = data.subarray(offset, offset + dataLength).toString("hex");
     }
     offset += dataLength;
+
+    // Log the parsed answer for debugging
 
     answers.push({
       domainName,

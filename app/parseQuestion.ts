@@ -1,12 +1,12 @@
 import extractLabel from "./extractLabel";
 
-function parseQuestion(questionsBuff: Buffer) {
+function parseQuestion(questionsBuff: Buffer, qdcount: number) {
   let offset = 12;
-  const qdcount = questionsBuff.readUInt16BE(4);
   const questions: Array<{
     domainName: string;
     type: number;
     class: number;
+    offset: number;
   }> = [];
 
   for (let i = 0; i < qdcount; i++) {
@@ -16,13 +16,14 @@ function parseQuestion(questionsBuff: Buffer) {
       offset,
       label
     );
+
     offset = newOffset;
 
     const type = questionsBuff.readUInt16BE(offset);
     const classCode = questionsBuff.readUInt16BE(offset + 2);
     offset += 4;
 
-    questions.push({ domainName, type, class: classCode });
+    questions.push({ domainName, type, class: classCode, offset });
   }
   return questions;
 }

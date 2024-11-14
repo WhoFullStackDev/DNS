@@ -3,9 +3,11 @@ import type { DnsMessageAnswer } from "./types";
 const writeAnswers = (answers: DnsMessageAnswer[]) => {
   return Buffer.concat(
     //@ts-ignore
+
     answers.map((answer) => {
       // Encode the domain name as an uncompressed label
       const labels = answer.domainName.split(".");
+
       const domainBuffer = Buffer.concat(
         labels.map((label) => {
           const len = Buffer.alloc(1);

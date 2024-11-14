@@ -18,6 +18,7 @@ export interface DnsMessageQuestions {
   type: number;
   class: number;
   domainName: string;
+  offset: number;
 }
 
 export interface DnsMessageAnswer {

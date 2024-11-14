@@ -11,7 +11,7 @@ function parseHeader(msg: Buffer): DnsMessageHeaders {
   return { packetId, ...flagObj, QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT };
 }
 
-function extractFlags(flags: number): DnsMessageHeaders {
+function extractFlags(flags: number) {
   const QR = (flags & 0b1000000000000000) >> 15; // Query (0) or Response (1)
   const OPCODE = (flags & 0b0111100000000000) >> 11; // Type of query
   const AA = (flags & 0b0000010000000000) >> 10; // Authoritative Answer
