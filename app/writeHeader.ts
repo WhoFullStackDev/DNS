@@ -15,7 +15,10 @@ const writeHeader = ({
   QDCOUNT = 0,
   packetId = 0,
 }: DnsMessageHeaders) => {
+  // Create a buffer to store the header data
   const buffer = Buffer.alloc(12);
+
+  // Write the header fields to the buffer
   buffer.writeInt16BE(packetId);
   const computed =
     (QR << 15) +

@@ -1,6 +1,7 @@
 import type { DnsMessageHeaders } from "./types";
 
 function parseHeader(msg: Buffer): DnsMessageHeaders {
+  // Read the header from the buffer
   const packetId = msg.readUint16BE(0);
   const flag = msg.readUInt16BE(2);
   const QDCOUNT = msg.readUint16BE(4);
@@ -12,6 +13,7 @@ function parseHeader(msg: Buffer): DnsMessageHeaders {
 }
 
 function extractFlags(flags: number) {
+  // Bitwise operations to extract the flag values
   const QR = (flags & 0b1000000000000000) >> 15; // Query (0) or Response (1)
   const OPCODE = (flags & 0b0111100000000000) >> 11; // Type of query
   const AA = (flags & 0b0000010000000000) >> 10; // Authoritative Answer

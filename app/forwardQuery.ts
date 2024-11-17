@@ -4,12 +4,14 @@ import type {
   DnsMessageHeaders,
   DnsMessageQuestions,
 } from "./types";
-import writeHeader from "./writeaHeader";
+import writeHeader from "./writeHeader";
 import writeQuestions from "./writeQuestion";
 import parseHeader from "./parseHeader";
 import parseQuestion from "./parseQuestion";
 import parseAnswer from "./parseAnswer";
+import { parseAdditionalSection } from "./parseAddition";
 
+// Get DNS resolver address
 const resolverAddress = process.argv[3].split(":");
 const resolverIp = resolverAddress[0];
 const resolverPort = parseInt(resolverAddress[1]);
@@ -20,35 +22,43 @@ const forwardQuery = async (
 ): Promise<{
   header: DnsMessageHeaders;
   question: DnsMessageQuestions[];
-  answer: DnsMessageAnswer[];
+  answers: DnsMessageAnswer[];
 }> => {
   return new Promise((resolve, reject) => {
+    // Create a socket to send the query to the DNS resolver
     const forwarderSocket = dgram.createSocket("udp4");
+
+    // Handle udp error
     forwarderSocket.on("error", (err) => {
       if (err) {
         forwarderSocket.close();
         reject();
       }
     });
-    console.log(header);
+
+    // encoded Header section and question section
     const encodeHeader = writeHeader({
       packetId: header.packetId,
       QDCOUNT: header.QDCOUNT,
-      RD: 1,
+      RA: 1,
+      RD: header.RD,
       QR: 0,
     });
-    const endcodeQuestion = writeQuestions([question]);
-    const query = Buffer.concat([encodeHeader, endcodeQuestion]);
-    forwarderSocket.send(query, resolverPort, resolverIp);
-    forwarderSocket.once("message", (data: Buffer) => {
-      const decodeHeader = parseHeader(data);
-      // console.log(decodeHeader);
-      if (header.RCODE !== 0) {
-        console.log(`Received error response with RCODE: ${header.RCODE}`);
-      }
-      const questions = parseQuestion(data, header.QDCOUNT as number);
 
-      const answer = parseAnswer(
+    const encodeQuestion = writeQuestions([question]);
+
+    // Send query to DNS resolver
+    // @ts-expect-error
+    const query = Buffer.concat([encodeHeader, encodeQuestion]);
+    // @ts-expect-error
+    forwarderSocket.send(query, resolverPort, resolverIp);
+
+    // Close the socket when the response is received
+    forwarderSocket.once("message", (data: Buffer) => {
+      // get Header and question and answer value
+      const decodeHeader = parseHeader(data);
+      const questions = parseQuestion(data, header.QDCOUNT as number);
+      const { answers, offset } = parseAnswer(
         data,
         header.QDCOUNT as number,
         question.offset
@@ -57,7 +67,7 @@ const forwardQuery = async (
       resolve({
         header: decodeHeader,
         question: questions,
-        answer,
+        answers,
       });
     });
   });

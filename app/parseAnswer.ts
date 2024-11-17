@@ -6,19 +6,15 @@ function parseAnswer(data: Buffer, ancount: number, offset: number) {
     const [name, newOffset] = extractLabel(data, offset);
     offset = newOffset;
 
-    // Read Type (2 bytes)
     const type = data.readUInt16BE(offset);
     offset += 2;
 
-    // Read Class (2 bytes)
     const classCode = data.readUInt16BE(offset);
     offset += 2;
 
-    // Read TTL (4 bytes)
     const ttl = data.readUInt32BE(offset);
     offset += 4;
 
-    // Read Data Length (2 bytes)
     const dataLength = data.readUInt16BE(offset);
     offset += 2;
 
@@ -27,6 +23,27 @@ function parseAnswer(data: Buffer, ancount: number, offset: number) {
     if (type === 1 && dataLength === 4) {
       // A record (IPv4 address): Data is 4 bytes for IPv4
       resourceData = Array.from(data.subarray(offset, offset + 4)).join(".");
+    } else if (type === 6) {
+      const [mName, afterMNameOffset] = extractLabel(data, offset);
+      const [rName, afterRNameOffset] = extractLabel(data, afterMNameOffset);
+
+      const serial = data.readUInt32BE(afterRNameOffset);
+      const refresh = data.readUInt32BE(afterRNameOffset + 4);
+      const retry = data.readUInt32BE(afterRNameOffset + 8);
+      const expire = data.readUInt32BE(afterRNameOffset + 12);
+      const minimum = data.readUInt32BE(afterRNameOffset + 16);
+
+      resourceData = {
+        primaryNS: mName,
+        adminEmail: rName,
+        serial,
+        refresh,
+        retry,
+        expire,
+        minimum,
+      };
+
+      offset = afterRNameOffset + 20;
     } else {
       // Other types of records (could be extended to handle other record types)
       resourceData = data.subarray(offset, offset + dataLength).toString("hex");
@@ -34,7 +51,6 @@ function parseAnswer(data: Buffer, ancount: number, offset: number) {
     offset += dataLength;
 
     // Log the parsed answer for debugging
-
     answers.push({
       domainName: name,
       type,
@@ -42,10 +58,11 @@ function parseAnswer(data: Buffer, ancount: number, offset: number) {
       ttl,
       dataLength,
       data: resourceData,
+      offset,
     });
   }
 
-  return answers;
+  return { answers, offset };
 }
 
 export default parseAnswer;

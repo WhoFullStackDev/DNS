@@ -26,5 +26,15 @@ export interface DnsMessageAnswer {
   type: number; // 2 bytes
   class: number; // 2 bytes
   ttl: number; // 4 bytes
-  data: string;
+  data:
+    | string
+    | {
+        primaryNS: string;
+        adminEmail: string;
+        serial: number;
+        refresh: number;
+        retry: number;
+        expire: number;
+        minimum: number;
+      };
 }
